@@ -1,0 +1,6 @@
+# Questions Ouvertes — [Nom du projet]
+
+(chaque question reste ici jusqu'à résolution — cochée = tranchée, avec la décision notée)
+
+- [ ] Question : ...
+  Décision : ...
