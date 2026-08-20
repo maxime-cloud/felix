@@ -96,3 +96,63 @@ socle pourrait suffire à la place.
 Guide de handoff : quels fichiers de `Output/` (et éventuellement de `Projects/`) donner à
 l'agent de codage et dans quel ordre, l'extrait à ajouter au `CLAUDE.md` d'ai-builder-saas, et la
 liste des fichiers à ne PAS confier à l'agent (utiles à la réflexion de Maxime, pas au code).
+
+---
+
+# Les quatre documents de handoff technique
+
+Ajoutés en août 2026. Ils existent pour **empêcher** quelque chose — c'est le critère qui distingue
+un livrable utile d'un document décoratif. S'ils n'empêchent rien, ils ne servent à rien.
+
+Ils vivent dans `Projects/<slug>/` et se remplissent **au fil de l'eau**, puis sont consolidés dans
+`Output/<slug>/` par le skill `integration-base`.
+
+## `Contraintes-Techniques.md`
+
+**Ce qu'il empêche :** que l'agent de codage **invente** les règles d'un service externe. Un agent
+qui n'a pas les contraintes écrites devant lui ne s'abstient pas — il suppose, et il suppose faux.
+Et sa section « écartés » empêche qu'il « optimise » en réintroduisant ce qu'on a éliminé.
+
+**Contenu :** contraintes externes non négociables (limites d'API, règles de plateforme,
+obligations légales, réalités de terrain) · outils retenus avec leur rôle et leur justification ·
+**outils écartés avec la raison du rejet** · ce qui reste à trancher · règles de sécurité
+d'implémentation · ordres de dépendance qui sont des conditions de correction.
+
+**Règle absolue :** chaque fait porte sa **source et sa date de vérification**. Ce qui n'a pas été
+vérifié est marqué comme non vérifié. Un fait non sourcé ne s'écrit pas.
+
+## `Regles-Metier.md`
+
+**Ce qu'il empêche :** que l'agent réinterprète des règles écrites en prose. Une règle formulée
+« il faut faire attention aux remises » sera interprétée ; « le plafond de remise est recalculé
+côté serveur au moment de l'écriture, et une valeur supérieure est rejetée » sera implémentée.
+
+**Contenu :** des **invariants testables**, chacun avec son énoncé impératif, la conséquence de sa
+violation, l'entité concernée, et la décision d'origine. Organisés par famille : intégrité des
+données, argent, transitions d'état, permissions, contraintes externes.
+
+**Critère de qualité :** chaque règle doit pouvoir devenir un test sans reformulation.
+
+## `Glossaire.md`
+
+**Ce qu'il empêche :** qu'un même concept reçoive trois noms différents entre le schéma, les
+routes, le code et l'interface. Petit fichier, effet important — l'incohérence de nommage apparaît
+au bout de deux jours et se paie jusqu'à la fin du projet.
+
+**Contenu :** terme retenu · nom technique · définition · **termes à ne pas utiliser** · langue des
+identifiants, langue de l'interface, conventions de casse · pièges de vocabulaire propres au projet
+(termes proches désignant des choses différentes).
+
+## `Pieges-A-Eviter.md`
+
+**Ce qu'il empêche :** que l'agent reproduise les erreurs observées chez les concurrents, et qu'il
+présente comme un argument ce qui n'est qu'un prérequis.
+
+**Contenu :** pièges de conception (avec où ils ont été observés, pourquoi c'en sont, et ce qu'on
+fait à la place) · pièges techniques (valeurs par défaut dangereuses, erreurs brutes affichées à
+l'utilisateur, écrans sans état vide) · **pièges de discours** (fonctionnalités qui sont des
+prérequis et non des différenciateurs, promesses intenables faites par des concurrents).
+
+**Pourquoi il compte :** cette connaissance se paie en explorant réellement des produits
+concurrents. Sans ce fichier, elle disparaît au moment du handoff — c'est le document le plus
+souvent absent d'un dossier de spécifications, et l'un des plus utiles.

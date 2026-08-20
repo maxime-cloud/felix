@@ -111,3 +111,46 @@ notée dans le fichier pour que `donnees-et-roles` la reprenne. Décisions d'arc
 
 "Architecture posée — [N] éléments communicants, [N] contraintes externes identifiées dont [la
 plus structurante]. On passe à la tarification ?" → bascule vers `tarification`.
+
+## Consignation obligatoire des contraintes (ajout août 2026)
+
+Chaque contrainte remontée par le sous-agent `verificateur-contraintes-externes` — limite de débit,
+quota, fenêtre temporelle, format imposé, comportement en cas d'échec, coût — se consigne
+**immédiatement** dans `Projects/<slug>/Contraintes-Techniques.md` §1, avec sa **source et sa date
+de vérification**, et la **conséquence concrète pour le code**.
+
+Pas en fin de skill : au moment de la vérification. Une contrainte notée plus tard perd sa source,
+et une contrainte sans source ne peut être ni vérifiée ni jugée périmée par l'agent de codage.
+
+Même règle pour les **décisions d'outillage** prises pendant ce skill (bibliothèque, composant,
+service) : §2 du même fichier, avec le rôle de l'outil et la raison du choix. **Et pour tout outil
+écarté, la raison du rejet** — sans quoi il sera réintroduit plus tard par quelqu'un qui « optimise ».
+
+## Diagrammes de synthèse obligatoires (ajout août 2026)
+
+Les diagrammes de flux (vue d'ensemble + séquences par flux critique) ne suffisent pas : ils
+montrent *comment ça circule*, jamais *qui peut quoi* ni *quels états existent*. Produis donc
+aussi, systématiquement :
+
+| Diagramme | Ce qu'il empêche |
+|---|---|
+| **Cas d'utilisation** — acteurs × capacités, groupées par domaine | Que l'agent de codage invente la matrice de permissions, et qu'il confonde un acteur externe avec un utilisateur du SaaS. C'est aussi l'entrée directe de `donnees-et-roles` et des user stories de la PRD |
+| **Un diagramme d'états par entité à cycle de vie** (commande, conversation, message sortant, tout objet piloté par un service externe) | Qu'il invente des transitions. Une machine à états dessinée est non négociable ; la même en prose est réinterprétée |
+| **Carte des dépendances entre modules**, avec l'ordre de construction porté sur les nœuds | Qu'il commence par le mauvais bout. C'est aussi le contrôle visuel qu'aucun cycle n'existe — et la carte de délégation du travail |
+
+**Critère de sélection, à appliquer sans indulgence : un diagramme qui n'empêche rien est
+décoratif.** N'en produis pas « pour faire complet ». Mieux vaut six diagrammes qui tranchent que
+quinze qui décrivent.
+
+**Ce qui ne se dessine PAS ici**, pour ne pas empiéter :
+- le **modèle entité-relation** → skill `donnees-et-roles` ;
+- les **parcours et enchaînements d'écrans** → skill `parcours-utilisateur` ;
+- tout diagramme de **composants, de déploiement ou d'infrastructure** → c'est de
+  l'implémentation, hors périmètre de Felix.
+
+Quand une entité à cycle de vie apparaît sans que son diagramme d'états soit possible (états
+inconnus, transitions non tranchées), **c'est une question à poser à Maxime**, pas un diagramme à
+inventer.
+
+**Si `Modules.md` a des sections vides** (cartographie des dépendances, ordre de construction), ce
+skill les complète — le graphe de dépendances se dessine ici de toute façon.

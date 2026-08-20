@@ -60,3 +60,31 @@ pour coder). Rédige :
 Une fois les deux fichiers générés : résume à Maxime où trouver l'ensemble des documents dans
 `Output/<slug>/`, et rappelle-lui l'extrait à coller dans le `CLAUDE.md` d'ai-builder-saas avant
 de lancer son agent de codage dessus. C'est la fin du parcours pour ce projet.
+
+## Documents de handoff technique (ajout août 2026)
+
+En plus de `Tools.md` et `Fichiers-Pour-Agent.md`, ce skill produit **quatre documents** qui
+existent pour empêcher l'agent de codage de redécider ce qui est déjà tranché :
+`Contraintes-Techniques.md` · `Regles-Metier.md` · `Glossaire.md` · `Pieges-A-Eviter.md`
+
+Leur rôle, leur structure et leur critère de qualité sont décrits dans
+`Knowledge/Guide-Documents-Livrables.md`. **Lis-le avant de les produire.**
+
+**Méthode.** Ces documents se sont remplis au fil du projet dans `Projects/<slug>/` — ici on les
+**consolide** vers `Output/<slug>/`, on ne les invente pas. Lance le sous-agent
+**`redacteur-handoff`** : il travaille dans un contexte séparé et repère les contradictions qu'un
+auteur ne voit plus dans son propre dossier. Traite son rapport (informations manquantes,
+contradictions, contraintes à rafraîchir) avant de clore le skill.
+
+**Ce qu'on ne donne PAS à l'agent de codage**, et à préciser dans `Fichiers-Pour-Agent.md` :
+`Benchmark-Concurrents.md` et les fichiers de vérification concurrentielle (ils ont nourri
+`Pieges-A-Eviter.md`, leur détail est du bruit pour coder), `Journal.md`, `Questions-Ouvertes.md`
+non résolues, et `La-Verite-Difficile.md` — ce dernier sert à décider, pas à construire.
+
+**Contrôle avant de clore :** chaque contrainte externe porte sa source et sa date ; chaque outil
+écarté porte sa raison ; chaque règle métier est formulée en invariant testable.
+
+**Source de la section « à ajouter au CLAUDE.md »** de `Fichiers-Pour-Agent.md` : la section 6 de
+`Projects/<slug>/Contraintes-Techniques.md`, remplie au fil de l'analyse. Ne la reconstitue pas de
+mémoire — reprends-la, et vérifie que chaque règle y tient en une ou deux phrases et s'applique
+partout. Une règle longue ou situationnelle appartient à `Regles-Metier.md`, pas au CLAUDE.md.

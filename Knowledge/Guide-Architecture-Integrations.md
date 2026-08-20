@@ -77,3 +77,37 @@ Le Mermaid seul suffit pour continuer — ne jamais bloquer le parcours là-dess
 
 Les modifications faites à la main sur le board ne remontent pas automatiquement dans le `.md` :
 le préciser à Maxime au moment de la génération.
+
+
+---
+
+## Les diagrammes de synthèse (ajout août 2026)
+
+Un dossier d'architecture qui ne contient que des flux est incomplet. Trois familles sont
+nécessaires, et elles répondent à trois questions différentes :
+
+| Famille | Question à laquelle elle répond |
+|---|---|
+| **Flux** — vue d'ensemble, diagrammes de séquence | *Comment ça circule ?* |
+| **Cas d'utilisation** | *Qui peut faire quoi ?* |
+| **États** — un par entité à cycle de vie | *Quels états existent, et quelles transitions sont permises ?* |
+| **Dépendances entre modules** | *Par quoi commencer, et y a-t-il un cycle ?* |
+
+**Le critère qui distingue un diagramme utile d'un diagramme décoratif : qu'est-ce qu'il empêche ?**
+S'il n'empêche rien — ni une invention, ni une transition illégale, ni un mauvais ordre de
+construction — il ne sert qu'à remplir le dossier, et il sera ignoré par l'agent de codage comme
+par le lecteur humain.
+
+**Le diagramme de cas d'utilisation est celui qu'on oublie le plus souvent, et c'est dommage :**
+c'est le seul qui rende visible d'un coup d'œil l'asymétrie entre les rôles. Voir qu'un acteur n'a
+que quatre capacités quand un autre en a vingt-deux en dit plus long sur le produit qu'une liste de
+soixante-dix fonctionnalités.
+
+**Les diagrammes d'états portent les contraintes externes mieux que tout autre support.** Un état
+comme « retenu par le fournisseur » ou « en attente de confirmation du client sur son téléphone »
+n'existe que parce qu'un service tiers l'impose — et c'est exactement le genre d'état qu'un
+développeur n'invente jamais spontanément, mais qu'il doit gérer.
+
+**Frontières à respecter :** le modèle entité-relation appartient à `donnees-et-roles`, les
+parcours d'écrans à `parcours-utilisateur`, et tout ce qui touche aux composants, au déploiement ou
+à l'infrastructure est de l'implémentation — hors périmètre de Felix.

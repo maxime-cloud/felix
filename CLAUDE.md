@@ -105,9 +105,25 @@ intégrations), au service du cadrage — jamais une validation de la pertinence
     justification d'impact courte ET une estimation d'effort (S/M/L) — l'impact seul ne suffit pas
     à prioriser pour un développeur solo.
 
-11. **Tout fichier généré est en `.md`**, sauf cas exceptionnel explicitement justifié.
+11. **Consignation immédiate des contraintes et des décisions d'outillage.** Toute contrainte
+    externe vérifiée (limite d'API, règle de plateforme, obligation légale), toute décision d'outil
+    ou de bibliothèque, et tout piège observé chez un concurrent se consignent **au moment où ils
+    apparaissent**, avec leur **source et leur date** — dans `Contraintes-Techniques.md`,
+    `Regles-Metier.md`, `Glossaire.md` et `Pieges-A-Eviter.md`. Jamais reconstitués en fin de
+    parcours, où l'on perd la source et où l'on réécrit de mémoire. **Un fait non sourcé ne
+    s'écrit pas.** Ces quatre fichiers existent pour une raison précise : empêcher l'agent de
+    codage de redécider ce qui est déjà tranché, et lui éviter de réintroduire ce qui a été écarté
+    — noter systématiquement le *pourquoi* d'un rejet, pas seulement le rejet.
+    **Les directives courtes et toujours applicables** (« ne jamais faire de suppression réelle »,
+    « tout montant est recalculé côté serveur ») vont en plus dans la section
+    **« Règles pour le CLAUDE.md de l'agent de codage »** de `Contraintes-Techniques.md` : c'est
+    l'accumulateur que `integration-base` reprend pour dire quoi ajouter au CLAUDE.md du projet de
+    code. Une règle qui doit être respectée à *chaque* fichier écrit n'a pas sa place uniquement
+    dans un document de spécification qu'on lit une fois.
 
-12. **Auto-réparation des projets antérieurs.** Au démarrage d'une session sur un projet existant,
+12. **Tout fichier généré est en `.md`**, sauf cas exceptionnel explicitement justifié.
+
+13. **Auto-réparation des projets antérieurs.** Au démarrage d'une session sur un projet existant,
     compare les fichiers présents dans `Projects/<slug>/` à ceux de `Projects/_template/`. Si des
     fichiers manquent parce que le projet a été créé avant une évolution de Felix, crée-les depuis
     le template et mets `Progress.md` à jour en conservant les cases déjà cochées — puis signale-le
@@ -164,7 +180,9 @@ Cette checklist vit et se coche dans `Projects/<slug>/Progress.md` :
 13. ☐ PRD rédigée (`PRD.md`, `Marketing.md`, `User-Stories.md`, `Modele-Donnees-Technique.md`,
     `Brief-Agent-Codeur.md`) et **confirmée conforme au produit voulu** par Maxime
 14. ☐ Intégration base faite (`Tools.md`, `Fichiers-Pour-Agent.md`, générés à partir de la
-    connaissance d'ai-builder-saas)
+    connaissance d'ai-builder-saas), et les quatre documents de handoff technique
+    (`Contraintes-Techniques.md`, `Regles-Metier.md`, `Glossaire.md`, `Pieges-A-Eviter.md`)
+    consolidés dans `Output/` — chaque contrainte sourcée et datée, chaque rejet motivé
 15. ☐ `Questions-Ouvertes.md` vide ou toutes les questions marquées résolues
 
 Aucun document de `Output/` n'est généré avant que les points requis à son stade soient cochés.
@@ -204,7 +222,8 @@ Felix/
 │   ├── arbitre-pertinence.md
 │   ├── verificateur-contraintes-externes.md
 │   ├── verificateur-coherence.md
-│   └── critique-produit.md
+│   ├── critique-produit.md
+│   └── redacteur-handoff.md
 ├── Projects/
 │   ├── _current.md
 │   ├── _template/
@@ -222,6 +241,10 @@ Felix/
 │       ├── MVP.md
 │       ├── La-Verite-Difficile.md
 │       ├── Questions-Ouvertes.md
+│       ├── Contraintes-Techniques.md   ← contraintes externes vérifiées + outils retenus/écartés
+│       ├── Regles-Metier.md            ← invariants testables
+│       ├── Glossaire.md                ← un concept = un nom
+│       ├── Pieges-A-Eviter.md          ← erreurs observées à ne pas reproduire
 │       ├── Changelog.md
 │       ├── Decision.md
 │       ├── Journal.md
@@ -234,6 +257,10 @@ Felix/
         ├── Fichiers-Pour-Agent.md
         ├── User-Stories.md
         ├── Modele-Donnees-Technique.md
+        ├── Contraintes-Techniques.md
+        ├── Regles-Metier.md
+        ├── Glossaire.md
+        ├── Pieges-A-Eviter.md
         └── Brief-Agent-Codeur.md
 ```
 
@@ -272,6 +299,7 @@ indépendant là où c'est nécessaire :
 | `verificateur-contraintes-externes` | Vérifie dans la documentation officielle les contraintes réelles d'un service externe avant qu'une interaction avec lui ne soit dessinée | `architecture-integrations` |
 | `verificateur-coherence` | Vérification mécanique de cohérence croisée entre documents | `donnees-et-roles`, `parcours-utilisateur`, `analyse-approfondie` |
 | `critique-produit` | Regard adverse indépendant sur la différenciation et la valeur | `analyse-approfondie` |
+| `redacteur-handoff` | Compile les quatre documents de handoff technique depuis le dossier projet, dans un contexte séparé | `integration-base` |
 
 `critique-produit` existe pour une raison précise : Felix propose lui-même une partie des
 fonctionnalités, et ne peut donc pas juger sa propre production sans complaisance. Ce sous-agent
