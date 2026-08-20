@@ -16,17 +16,18 @@ technique réel. Estimé pour un développeur solo déléguant à un agent IA su
 | # | Domaine | Candidates | État |
 |---|---|---|---|
 | A | Cœur de métier — agent vendeur & conversation | 14 | **validé** (A6, A8, A13, A14 tranchés) |
-| B | Catalogue produits | 5 | **posé**, B0 arbitré |
+| B | Catalogue produits | 6 | **validé** |
 | C | Commandes & livraison | 6 | **en validation** (C3, C4 validées) |
 | D | Paiement & argent | 8 | **en validation** (D2 validée) |
 | E | Boîte de réception | 6 | **en validation** |
 | F | Fidélisation & sortant | 7 | **en validation** |
 | G | **Structure du compte, utilisateurs & rôles** | 3 | **en validation** (G1, G2 arbitrés) |
-| H | Onboarding | 6 | **en validation** |
-| I | Reporting | 3 | **en validation** |
+| H | Onboarding | 7 | **validé** |
+| I | Reporting | 4 | **validé** |
 | J | Back-office ContexFly | 2 | **en validation** |
-| K | Socle SaaS (couvert par `ai-builder-saas`) | — | pour mémoire |
+| K | Socle SaaS + **application installable (K1)** | 1 | **validé** |
 | L | **Croissance — parrainage & réductions plateforme** | 6 | **validé** |
+| N | **Imposées par les contraintes externes** | 13 | **validé** (Maxime, 2026-08-19) |
 | P | **Passe proactive de Felix** | 4 | **validé** |
 
 Les domaines E, H et I ont été enrichis par l'exploration concurrentielle du 17/08 — voir
@@ -857,8 +858,8 @@ arrive tard.** Trois conséquences, dans l'ordre de gravité :
    toutes les entités déjà décrites gagnent une clé d'activité.** Si ce n'est pas fait dès le
    départ, la reprise coûte plus cher que la fonctionnalité. → **priorité absolue au skill
    `donnees-et-roles`.**
-2. **Tarification.** Le nombre d'agents devient un **levier de prix**, ce qui change la structure
-   des paliers envisagée. Fiitsa fait exactement ça : 1 business sur tous les plans, illimité
+2. **Tarification.** ~~Le nombre d'agents devient un levier de prix.~~ **Annulé le 19/08** : chaque
+   activité a son abonnement. Un geste commercial multi-activités se fait par **coupon dégressif**. Fiitsa fait exactement ça : 1 business sur tous les plans, illimité
    uniquement sur le plan Agence avec marque blanche. C'est donc une pratique validée localement.
 3. **Meta.** Chaque activité a **son propre numéro WhatsApp**, donc son propre WABA et son propre
    portefeuille — sinon les activités se partagent le plafond d'envoi (constat du 07/10/2025).
@@ -1346,6 +1347,114 @@ Pour mémoire — à vérifier point par point au skill `integration-base`, nota
 couvre réellement pour la structure `compte → activité → membre` de G1.
 
 ---
+
+---
+
+# Domaine N — Fonctionnalités imposées par les contraintes externes
+
+**✅ Domaine validé en bloc par Maxime le 2026-08-19.**
+
+Ajoutées le **2026-08-19**, en aller-retour depuis `architecture-integrations`. Aucune n'a été
+choisie : **chacune est imposée par une contrainte vérifiée** de Meta ou de Notch Pay. Les ignorer
+ne les fait pas disparaître — elles apparaissent en production, au pire moment.
+
+Sources : `_contraintes-meta.md`, `_contraintes-notchpay.md`.
+
+| # | Fonctionnalité | Contrainte qui l'impose | Priorité | Effort |
+|---|---|---|---|---|
+| **N1** | **Second routeur de webhooks, indexé sur le WABA ID** | Les webhooks de template et de compte ne sont **pas surchargeables** et ne portent aucun `phone_number_id` | **Must** | M |
+| **N2** | **Écran d'administration des templates** — statut, motif de rejet traduit en français, recommandation Meta, correction et resoumission | 14 états de template, 8 motifs de rejet, appel possible sous 24 h | **Must** | M |
+| **N3** | **File d'attente d'onboarding** + compteur glissant 7 jours | Meta plafonne à **10 nouveaux clients / 7 j** avant App Review, **200** après | **Should** | M |
+| **N4** | **Agrégateur de réponse de l'agent** — un seul message par tour | **1 message toutes les 6 s** vers le même utilisateur (`131056`) | **Must** | M |
+| **N5** | **État « retenu par Meta »** dans la machine à états du message | `held_for_quality_assessment` + portfolio pacing ; un `200 OK` ne veut pas dire envoyé | **Must** | S |
+| **N6** | **Pipeline de ré-hébergement des médias** entrants + compression des médias sortants | URL Meta valides 5 min, ID reçus 7 j, téléchargement authentifié ; image sortante ≤ 5 MB | **Must** | M |
+| **N7** | **Transcription des notes vocales** (X13) | Meta ne fournit **aucune** transcription — sans elle, A10 n'existe pas | **Could** *(aligné sur A10, corrigé le 19/08)* | M |
+| **N8** | **Coffre de secrets par commerçant** — PIN 2FA, `verify_token`, business token | Imposé par l'enregistrement du numéro et les webhooks par tenant | **Must** | S |
+| **N9** | **Vérification du moyen de paiement Meta** avant toute campagne payante | En Tech Provider, le client ajoute son propre moyen de paiement ; sans lui, la campagne échoue sans explication | **Must** | S |
+| **N10** | **Surveillance de santé de connexion** + parcours de reconnexion | `ACCOUNT_OFFBOARDED` sur **changement de téléphone** — mode d'échec **normal** sur ce marché | **Must** | M |
+| **N11** | **Verrou d'envoi** (enregistrement avant appel HTTP) | Aucune idempotence côté Meta **ni** côté Notch Pay → double envoi ou **double débit** au moindre timeout réseau | **Must** | S |
+| **N12** | **Pagination du catalogue en liste interactive** + **libellé court** produit | **10 lignes au total** toutes sections confondues ; titre de ligne **24 caractères** | **Must** | S |
+| **N13** | **Réconciliation active des paiements** (P5w) | Notch Pay le recommande explicitement : « Always verify the payment status… before fulfilling the order » | **Must** | M |
+
+## Les trois qui méritent plus qu'une ligne
+
+### N4 — Agrégateur de réponse
+
+**C'est la contrainte la plus dangereuse du dossier pour un agent conversationnel.** Un agent
+naturel répond volontiers en plusieurs bulles — « Voici les modèles disponibles », puis une photo,
+puis « Lequel vous intéresse ? ». **Cela déclenche `131056` et le message est rejeté.**
+
+L'agent doit produire **un seul message par tour**, quitte à combiner texte et média en un envoi.
+Ce n'est pas un réglage de prompt : c'est une contrainte à appliquer **dans le code**, après
+génération, avant envoi. Un prompt qui « demande » de répondre en un message échouera parfois.
+
+### N10 — Santé de connexion
+
+En coexistence, `ACCOUNT_OFFBOARDED` est émis quand le commerçant **change de téléphone ou
+réenregistre son numéro**. Sur le marché camerounais, changer de téléphone n'est pas un événement
+rare — c'est ordinaire. **Le mode d'échec est donc normal, pas exceptionnel.**
+
+Sans surveillance, le commerçant découvre que son agent ne répond plus quand un client se plaint.
+Il faut une détection, une alerte, et un parcours de reconnexion en quelques gestes.
+
+### N2 — Administration des templates
+
+Meta renvoie un motif de rejet parmi 8 valeurs techniques (`TAG_CONTENT_MISMATCH`,
+`INCORRECT_CATEGORY`…) **et une recommandation textuelle**. Un commerçant camerounais ne comprendra
+jamais `TAG_CONTENT_MISMATCH` — il faut une **table de traduction en français**, et afficher la
+recommandation de Meta telle quelle.
+
+⚠️ Et un piège de séquence : un template peut être mis en **pause par Meta entre sa préparation et
+son envoi**, pour retours négatifs ou faible taux de lecture. **Revérifier le statut au moment de
+l'envoi**, pas seulement à la création.
+
+## I4 — Recherche, filtres, pagination et export
+
+**Statut : ✅ VALIDÉE (issue de `saas-essentiels`, 2026-08-19)** · Priorité : **Must** · Effort : **M**
+
+**Angle mort complet** : aucune des ~70 fonctionnalités validées ne traitait ce sujet. Or au
+troisième mois d'un commerçant actif : 200 produits, 500 clients, 1 500 commandes.
+Recherche et filtres sur produits, commandes, clients et conversations · **pagination partout**
+(une liste non paginée casse d'abord sur mobile en connexion lente) · **export CSV** des commandes
+et des clients — qui est aussi ce qui rend un départ propre possible (catégorie 17).
+
+## B5 — Import d'une base clients existante
+
+**Statut : ✅ VALIDÉE (Maxime, 2026-08-19)** · Priorité : **Should** · Effort : **M**
+
+Import de contacts depuis un fichier ou une liste. Résout le démarrage à froid de la fidélisation :
+sans lui, les segments (F1) restent vides six mois, le temps d'accumuler l'historique.
+
+🔴 **Barrière non négociable : un contact importé n'a pas d'opt-in WhatsApp.** Il entre en base
+pour la mémoire client et le rapprochement d'historique, mais **ne peut recevoir aucune campagne**
+tant qu'il n'a pas écrit lui-même (R18, F5). Sans cette barrière, l'import devient exactement la
+porte d'entrée vers le démarchage à froid écarté au cadrage — et il fait bannir le numéro du
+commerçant. L'interface doit le dire au moment de l'import, pas au moment de l'échec.
+
+## K1 — Application installable et consultation hors ligne
+
+**Statut : ✅ VALIDÉE (Maxime, 2026-08-19)** · Priorité : **Should** · Effort : **L**
+
+PWA installable, consultable sans réseau. Répond à un vide identifié au benchmark et déjà occupé
+localement par Ngavix.
+
+**Périmètre borné :** consultation hors ligne du catalogue, des commandes du jour, des fiches
+clients et de la fiche livreur · **mise en file** des saisies simples (marquer livrée, encaissement
+en espèces, ajout de produit), synchronisées au retour du réseau.
+
+❌ **Pas de conversation hors ligne.** Un agent qui répond suppose le réseau, et une réponse
+différée de deux heures est pire qu'une absence de réponse — le client aura déjà acheté ailleurs.
+
+⚠️ Effort **L** : la synchronisation différée impose de gérer les conflits (deux appareils, une
+même commande) et l'invalidation du cache. C'est le septième « L » du périmètre.
+
+## H7 — Support par WhatsApp
+
+**Statut : ✅ VALIDÉE (issue de `saas-essentiels`, 2026-08-19)** · Priorité : **Should** · Effort : **S**
+
+Rien n'était prévu. **F7 (pédagogie des règles WhatsApp) couvre l'essentiel du support
+prévisible** — c'est là que les questions se concentreront. S'y ajoute un contact direct **par
+WhatsApp**, cohérent avec le produit et avec la cible. Pas de FAQ ni de chat au MVP.
 
 ---
 

@@ -74,3 +74,38 @@ nouvelle boucle d'analyse).
   celle de Fiitsa, qui revendique « 0 risque de blocage par Meta » — affirmation intenable
   puisque la note de qualité dépend du taux de blocage des destinataires, pas de l'outil d'envoi.
   Expliquer la règle réduit le support et fait attribuer les échecs à Meta plutôt qu'à ContexFly.
+
+## 2026-08-19 — aller-retour `architecture-integrations` → `fonctionnalites`
+
+- **Changement :** ajout du **domaine N — 13 fonctionnalités imposées par les contraintes
+  externes**, découvertes en vérifiant la documentation officielle de Meta et de Notch Pay.
+- **Raison :** aucune n'a été choisie — chacune est imposée par une contrainte vérifiée. Les plus
+  structurantes : l'agrégateur de réponse (N4, dû à la limite d'un message toutes les 6 secondes
+  vers le même utilisateur), le second routeur de webhooks indexé sur le WABA ID (N1), et la
+  surveillance de santé de connexion (N10, `ACCOUNT_OFFBOARDED` au changement de téléphone).
+
+- **Correction :** l'affirmation « séparation des flux par alternate webhook endpoints (URL propre
+  par WABA) » écrite dans `Contraintes-Techniques.md` était **partiellement fausse**. Les
+  endpoints alternatifs ne couvrent que le **trafic conversationnel** ; les webhooks de template,
+  de qualité et de compte arrivent obligatoirement sur l'URL par défaut, sans `phone_number_id`.
+  Corrigé, et `Architecture.md` §1.1 annoté en conséquence.
+
+## 2026-08-19 — modèle de données et périmètre
+
+- **⚠️ Changement majeur :** « le nombre d'agents est plafonné par le palier d'abonnement »
+  (décision du 17/08, G1) est **annulé**. Avec l'option A, **chaque activité a son propre
+  abonnement** ; il n'y a plus de quota d'activités.
+- **Raison :** l'option A fait d'une activité une organisation du socle, et `subscriptions` est
+  rattaché à l'organisation. Le geste commercial sur le multi-activités passe désormais par un
+  **coupon dégressif**, pas par un entitlement.
+- **Ce que ça change pour `tarification` :** la grille se construit **par activité**, pas par
+  compte avec quota.
+
+- **Changement :** le mode dégradé, **écarté du MVP** le 19/08 au matin, est **retenu** le même
+  jour (Q38 → **K1**, PWA installable et consultation hors ligne).
+- **Raison :** décision de Maxime. Septième fonctionnalité en effort L du périmètre.
+
+- **Changement :** l'import d'une base clients passe de « à trancher » à **retenu** (Q37 → **B5**).
+
+- **Changement :** le rôle intermédiaire passe de `admin` à **`manager`**. Le rôle `admin` du
+  socle est renommé, pas ajouté.

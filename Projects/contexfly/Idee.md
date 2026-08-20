@@ -141,8 +141,7 @@ français/pidgin, prix compatible avec une PME camerounaise) et non fonctionnel.
   il vit dans WhatsApp et ne voit qu'une page web, celle du panier et du paiement. Aucune
   inscription, aucun mot de passe — c'est une contrainte de conception, pas un détail.
 - **Administrateur ContexFly** — ⚠️ **l'option B en fait un rôle produit, plus seulement une
-  fonction de support.** Il doit instruire le KYC des commerçants (obligation contractuelle
-  PawaPay), superviser les reversements, traiter les litiges et les remboursements, et produire
+  fonction de support.** Il doit instruire le KYC des commerçants (obligation contractuelle Notch Pay), superviser les reversements, traiter les litiges et les remboursements, et produire
   le reporting mensuel des sous-marchands. À modéliser comme un vrai back-office, pas comme un
   accès superutilisateur bricolé.
 
@@ -203,7 +202,8 @@ commandes encaissées sans qu'un humain intervienne**. Tout le reste en découle
   jour, tous expéditeurs confondus**, appliqué au niveau de l'utilisateur et non de l'entreprise.
   Erreur `131049` quand le plafond est atteint. La délivrance d'une campagne ne peut donc jamais
   être garantie. *(Vérifié.)*
-- **Architecture retenue — application ↔ n8n.** L'application est le point d'entrée et de sortie ;
+- ~~**Architecture retenue — application ↔ n8n.**~~ ⛔ **ABANDONNÉ le 2026-08-19** — l'agent vit
+  dans le code (`Reference-Technique-Agent.md`). Conservé pour la traçabilité : L'application est le point d'entrée et de sortie ;
   **n8n est l'orchestrateur du raisonnement métier**, avec plusieurs workflows coexistants.
   Décision structurante : **l'application est le seul composant qui parle à l'API WhatsApp.** n8n
   lui envoie une requête indiquant le type de message et ses arguments, et ne manipule jamais les

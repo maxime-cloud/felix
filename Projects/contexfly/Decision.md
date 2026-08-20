@@ -154,8 +154,7 @@ pour ne jamais re-débattre un sujet déjà tranché sans une bonne raison de le
   m'avait fait pencher pour PawaPay, est également satisfait : Notch Pay Sync est documenté comme
   solution de paiement pour marketplaces, avec **comptes sous-marchands, split payment et
   reversements de masse automatisés** (vérifié). S'y ajoutent les avantages déjà notés : entreprise
-  camerounaise, support local, interlocuteur joignable, tarif identique (1 % encaissement,
-  1 % reversement, sans frais fixes).
+  camerounaise, support local, interlocuteur joignable, tarif équivalent (voir la décision du 19/08 : **2 % encaissement + 1 % reversement**).
 ## 2026-08-17 — arbitrages produit
 
 - **Décision (Maxime) :** Ne **pas** passer par Genuka WA comme fournisseur d'accès à l'API
@@ -332,3 +331,80 @@ de recoupement, ce qui a été décidé ensemble prime.)*
   **recalculé côté serveur** au moment de l'écriture, jamais repris du dialogue — `needsApproval`
   s'ajoute mais ne remplace pas. (4) Le jeu d'outils transmis à l'agent découle de la configuration
   du commerçant (A4/A5/A12) : ce qui est désactivé n'existe pas dans son contexte.
+
+## 2026-08-19 — modularisation
+
+- **Décision :** découpage en **13 modules** — M1 Socle multi-activités · M2 Catalogue & vitrine ·
+  M3 Canal WhatsApp · M4 Conversations & inbox · M5 Agent de vente · M6 Commandes & livraison ·
+  M7 Paiement & encaissement · M8 Fidélisation & campagnes · M9 Onboarding & activation ·
+  M10 Abonnement · M11 Croissance & parrainage · M12 Mesure & reporting · M13 Back-office.
+- **Choix de découpage à retenir :**
+  - **M3 est le seul module qui parle à Meta.** Toutes les règles WhatsApp s'appliquent en un seul
+    endroit, ce qui rend R17, R18 et R20 vérifiables.
+  - **M5 (agent) ne dépend que d'outils exposés par les autres modules** ; il n'écrit jamais
+    directement en base et personne ne dépend de lui. C'est ce qui rend le modèle de sécurité
+    tenable et l'agent remplaçable.
+  - **P4 (lien produit partageable) est rattaché à M2** — c'est une projection publique en lecture
+    seule du catalogue, pas un module d'acquisition.
+  - **L3 (réductions sur l'abonnement) est rattaché à M10, pas à M11** — une réduction modifie le
+    prix de l'abonnement ; la confondre avec la remise commerçant (F2) serait une erreur de modèle.
+- **Aucun cycle.** Deux quasi-cycles levés : M4↔M5 (la bascule IA↔humain écrit un état que M5 lit,
+  M4 n'appelle jamais M5) et M5↔M8 (l'agent lit le palier de fidélité par un outil ; les campagnes
+  passent par M3, jamais par M5).
+- **Ordre de construction en 9 vagues**, M1 en premier, M5 en vague 6.
+- **Recommandation de Felix portée à `MVP.md` :** construire **très tôt une tranche verticale
+  minimale de M5** — un seul type de question, trois produits — uniquement pour **mesurer le coût
+  réel d'une conversation** (Q13). Pas pour livrer, pour savoir. Découvrir en vague 6 que le coût
+  d'inférence rend le modèle tarifaire intenable serait une erreur coûteuse.
+
+## 2026-08-19 — outillage Felix
+
+- **Décision (Maxime) :** ajout de quatre documents de handoff technique au template Felix et à
+  `Output/` — `Contraintes-Techniques.md`, `Regles-Metier.md`, `Glossaire.md`, `Pieges-A-Eviter.md`
+  — plus un principe de consignation immédiate (source + date, un fait non sourcé ne s'écrit pas),
+  un sous-agent `redacteur-handoff`, et la mise à jour des skills `integration-base` et
+  `architecture-integrations`.
+- **Raison :** empêcher l'agent de codage de redécider ce qui est tranché et de réintroduire ce qui
+  a été écarté. Le critère de sélection retenu pour chaque document est **ce qu'il empêche**, pas
+  ce qu'il contient.
+
+## 2026-08-19 — modèle de données, rôles et conformité
+
+- **Décision (Maxime) — STRUCTURANTE : une activité EST une organisation (option A).** Le
+  multi-activités passe par l'appartenance à plusieurs organisations du socle.
+- **Raison :** l'isolation multi-locataire (R8) doit se vérifier sur **une seule** clé. L'option B
+  (organisation = compte, activité = entité fille) l'aurait fait porter sur deux clés, partout,
+  à l'endroit exact où une erreur est la plus grave.
+- **⚠️ ANNULE la décision du 2026-08-17** selon laquelle « le nombre d'agents est plafonné par le
+  palier d'abonnement ». **Il n'y a plus de quota d'activités : chaque activité a son abonnement.**
+  Un geste commercial sur le multi-activités se fait par coupon dégressif, pas par entitlement.
+
+- **Décision (Maxime) : trois rôles — `owner`, `manager`, `member`.** Le socle nomme le rôle
+  intermédiaire `admin` ; ContexFly le renomme `manager`. **Exactement un `owner` par activité**
+  (R26) : c'est la personne physique vérifiée au KYC et le titulaire du WABA.
+- **Décision (Maxime) :** au transfert de propriété, l'ancien `owner` devient `manager`, et un
+  **nouveau KYC est nécessaire** (R30) — c'est un changement de marchand, pas de rôle.
+
+- **Décision (Maxime) : aucune suppression réelle, jamais (R29).** Toute « suppression » est un
+  changement de statut ; la donnée reste visible et réactivable par l'administrateur ContexFly.
+  Corollaires : R28 (archivage refusé si de l'argent est en vol), R31 (perte d'accès subie notifiée
+  in-app **et** par e-mail).
+
+- **Décision (Maxime) : le modèle est Gemini.** Modèle principal retenu par Felix :
+  **Gemini 2.5 Flash** (0,30 $/M entrée, 2,50 $/M sortie).
+- **Conséquence chiffrée (Q13 résolue) :** ≈ **10 FCFA par conversation**, ≈ 6 000 FCFA/mois à
+  20 conversations/jour → **un abonnement à 15 000 FCFA avec conversations illimitées tient**, avec
+  ~60 % de marge brute. ⚠️ **Il ne tient pas sur Gemini 3.7 Flash**, dont le tarif d'introduction
+  double le 01/01/2027.
+
+- **Décision (Maxime) : frais Notch Pay = 2 % à l'encaissement + 1 % au reversement (3 %).**
+  Connaissance directe de Maxime, fait foi. Les 3 % sont **affichés au commerçant** (R7bis).
+
+- **Décision (Maxime) :** import d'une base clients retenu (**B5**), avec barrière d'opt-in — un
+  contact importé ne reçoit **aucune campagne** tant qu'il n'a pas écrit lui-même.
+- **Décision (Maxime) :** **PWA installable et consultation hors ligne** retenues (**K1**), en
+  renversement de l'écartement initial. Pas de conversation hors ligne.
+- **Décision (Felix) :** rétention — conversations 24 mois, médias 6 mois, commandes et registre
+  sans limite, clients anonymisés après 24 mois sans activité (R32). **Le contexte lu par l'agent
+  (3-5 dernières conversations) n'est pas la durée de rétention** (R33).
+- **Décision (Felix) :** le libellé court produit est **dérivé par l'agent B0**, corrigeable.

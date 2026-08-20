@@ -18,7 +18,96 @@
   Décision (Maxime, 2026-08-15) : **le client apporte son propre numéro**, avec tutoriel vidéo
   intégré. Le pool de numéros pré-configurés reste indécis → voir Q3bis.
 
+## Issues de `saas-essentiels` (2026-08-19)
+
+- [x] **Q37 — Import d'une base clients existante.** ✅ **Retenu (Maxime, 2026-08-19).**
+  → fonctionnalité **B5**, import de contacts clients. ⚠️ Contrainte forte : un contact importé
+  **n'a pas d'opt-in WhatsApp** — il entre en base pour la mémoire client et l'historique, mais
+  **ne peut recevoir aucune campagne** tant qu'il n'a pas écrit lui-même (R18, F5). Sans cette
+  barrière, l'import devient une porte d'entrée vers le démarchage à froid qu'on a écarté au
+  cadrage, et il fait bannir le numéro du commerçant.
+
+- [x] **Q38 — Mode dégradé.** ✅ **Retenu (Maxime, 2026-08-19) : faire comme Ngavix** — application
+  installable en **PWA**, consultable **hors connexion**.
+  *(Lecture de Felix de la consigne « fais la même chose ». Si tu voulais dire autre chose,
+  corrige — c'est une addition de périmètre non triviale.)*
+  → fonctionnalité **K1**. Périmètre volontairement borné : **consultation hors ligne** (catalogue,
+  commandes du jour, fiches clients, fiche livreur) et **saisie mise en file** pour les actions
+  simples. ❌ **Pas de conversation hors ligne** — un agent qui répond suppose le réseau, et une
+  réponse différée de deux heures est pire que pas de réponse.
+
+- [x] **Q39 — CGU, CGV, politique de confidentialité.** ✅ **Rédigées (2026-08-19)** →
+  `_documents-juridiques.md`. ⚠️ **Brouillons de travail, à faire relire par un juriste** avant
+  publication : ContexFly intervient dans un flux de paiement et traite les données de clients de
+  ses clients, ce qui engage une responsabilité réelle.
+
+- [ ] **Q40 — Restauration : qui, et à quelle granularité ?** R29 (aucune suppression réelle)
+  couvre le cas courant — il n'y a rien à restaurer. Reste la corruption de données ou l'erreur de
+  masse. Qui peut restaurer, et jusqu'à quel niveau de finesse ?
+  Décision : ...
+
 ## Ouvertes — bloquantes ou structurantes
+
+- [ ] **🔴 Q29 — RÉOUVERTURE DE Q23 : qui détient juridiquement les fonds chez Notch Pay ?**
+  Q23 avait été close le 16/08 sur la base « l'argent est stocké chez eux, donc on passe ». **La
+  vérification documentaire du 19/08 ne confirme pas cette hypothèse — elle la contredit
+  plutôt.** Rien dans la documentation Notch Pay, la page produit Sync, le contrat marchand ni le
+  contrat partenaire n'énonce qui est titulaire du solde avant reversement. Et trois indices
+  convergent vers un **transit par un solde plateforme** : `GET /balance` renvoie le solde du compte
+  authentifié, les transferts exigent « sufficient funds in **your** Notch Pay account », et le
+  split déduit l'`application_fee` **puis** transfère le reste.
+  ⚠️ **Si confirmé, ContexFly détient les fonds au sens économique — R3 est violée et un agrément
+  EME/établissement de paiement BEAC devient nécessaire.**
+  **À obtenir par écrit de Notch Pay avant toute ligne de code d'encaissement.**
+  *Atténuation immédiate, sans attendre la réponse :* modéliser le solde commerçant comme un
+  **registre d'écritures append-only**, jamais comme un champ `solde` — cette structure survit aux
+  deux montages possibles.
+  Décision : ...
+
+- [ ] **🔴 Q30 — Notch Pay Sync n'est pas en libre-service et n'est pas dans l'OpenAPI.**
+  « Contact our sales team to enable Sync » + vérifications de conformité. Et `/accounts`, `/sync`,
+  `/refunds` sont **absents de la spécification OpenAPI officielle**.
+  **Conséquence de planning : deuxième dépendance externe bloquante, à côté de la validation Meta
+  (Q22).** Aucun code d'encaissement n'est testable avant accord commercial signé.
+  **À engager immédiatement, en parallèle du développement.**
+  Décision : ...
+
+- [ ] **Q31 — Type de compte connecté : Standard, Express ou Custom ?**
+  Standard (dashboard direct, payouts par le titulaire) · Express (onboarding 2-3 min, dashboard
+  limité, payouts par la plateforme) · Custom (invisible, marque blanche, tout géré par ContexFly).
+  **Choix structurant et quasi irréversible.** Custom donne la meilleure expérience mais concentre
+  toute la charge KYC et support sur ContexFly. *Position de Felix : Express, sauf si Notch Pay
+  démontre que Custom n'alourdit pas les obligations.*
+  Décision : ...
+
+- [ ] **Q32 — Les plafonds Cameroun s'appliquent à qui ?** 500 000 XAF/jour et 5 000 000 XAF/mois,
+  rattachés au régulateur BEAC dans la doc. Client final, commerçant, ou **compte plateforme** ?
+  **Si c'est au compte plateforme, c'est un plafond de croissance dur pour ContexFly.**
+  Décision : ...
+
+- [ ] **Q33 — Pas de clé d'idempotence sur `POST /payments`.** Risque de **double débit du client
+  final** si un appel expire côté réseau et qu'on le rejoue. Le `reference` personnalisé offre
+  peut-être une déduplication implicite, mais **ce n'est pas documenté**. À valider en bac à sable
+  **avant de coder le moindre réessai automatique sur un POST**.
+  Décision : ...
+
+- [ ] **Q34 — Le remboursement mobile money est-il automatisable ?** Non confirmé. **Si MoMo n'est
+  pas remboursable par API, D7 devient un processus manuel** — écran d'administration et procédure
+  opérationnelle, pas une fonctionnalité.
+  Décision : ...
+
+- [x] **Q35 — Frais Notch Pay.** **Tranché (Maxime, 2026-08-19) : 2 % à l'encaissement + 1 % au
+  reversement = 3 % au total.** Maxime a une connaissance directe du fonctionnement de Notch Pay.
+  **Obligation produit associée :** les 3 % sont **visibles du commerçant** dans le produit et
+  expliqués dans la documentation de la plateforme (règle R7bis).
+  *(La page tarifs publique affiche 1 % + 1 % — divergence signalée, non arbitrée.)*
+
+- [ ] **Q36 — Friction KYC sous-estimée.** Le compte connecté personne physique exige pièce
+  d'identité **+ selfie + justificatif de domicile**. Le justificatif de domicile est une friction
+  réelle pour un commerçant informel camerounais, sur un parcours mobile. **À intégrer au parcours
+  H5 et à confirmer avec Notch Pay** (obligatoire ou non).
+  Décision : ...
+
 
 - [x] **Q3bis — Numéros pré-configurés fournis par ContexFly.**
   Décision (Maxime, 2026-08-15) : **abandonnés**. Le client apporte toujours son propre numéro.
@@ -27,12 +116,15 @@
   *(Le numéro de démo pour essai n'est pas retenu non plus à ce stade — à rouvrir seulement si
   l'onboarding s'avère bloquant en conditions réelles.)*
 
-- [ ] **Q6bis — Forme du moteur de fidélisation.** Automatisations pré-écrites activables en un
+- [x] **Q6bis — Forme du moteur de fidélisation.** **Tranché : automatisations pré-écrites** — F3
+  est Must et validée, F6 (constructeur générique) est Could avec « jamais avant F3 ».
+  *(Cochée le 19/08.)*
+
+<!-- **Q6bis — Forme du moteur de fidélisation.** Automatisations pré-écrites activables en un
   clic avec 2-3 paramètres (position de Felix) vs constructeur de règles générique « tout
   configurable » (demande de Maxime). Argument : un gérant de boutique ne configurera pas un
   moteur de segmentation ; l'écran vide d'un rule builder reste vide. À trancher au skill
-  `fonctionnalites`.
-  Décision : ...
+  `fonctionnalites`. -->
 
 - [ ] **Q9 — Plafond de remise contraint dans le code.** L'agent IA propose des réductions : le
   plafond doit être appliqué côté serveur, jamais confié au prompt. Définir la règle exacte
@@ -162,8 +254,9 @@
   cible), ou revenir vers Notch Pay et négocier un cadre sur mesure.*
   → **Résolu par le choix de Notch Pay (KYC personne physique).** -->
 
-- [x] **Q20 — Notch Pay vs PawaPay.** Tranché par Felix le 2026-08-15 sur délégation de Maxime :
-  **PawaPay**, principalement parce que le cadre contractuel sous-marchands existe par écrit
+- [x] **Q20 — Notch Pay vs PawaPay.** ⚠️ **Réponse finale : NOTCH PAY.** *(Corrigé le 19/08 — cette
+  entrée affirmait encore « PawaPay », décision annulée le 15/08 au soir.)* Historique : Felix avait
+  d'abord tranché pour **PawaPay**, principalement parce que le cadre contractuel sous-marchands existe par écrit
   (Schedule 2) et que le prix est identique (1 % encaissement, 1 % reversement). Détail des
   raisons et du coût de ce choix dans `Decision.md`. **Conditionné à Q21.**
 
@@ -220,12 +313,14 @@
   règles, paiement). Non fait : écrit dans le compte de Maxime.
   Décision : ...
 
-- [ ] **Q13 — Coût d'inférence réel d'une conversation IA complète.** Fiitsa facture 100 FCFA par
-  conversation et par jour, et son propre simulateur donne 60 000 FCFA/mois à 20 conv/jour — alors
-  que le marché local accepte 9 900-20 000 FCFA/mois. *Enjeu : un abonnement fixe avec
-  conversations illimitées peut être un pari contre sa propre structure de coût.* → à modéliser
-  avant `tarification`.
-  Décision : ...
+- [x] ✅ **Q13 — Coût d'inférence.** **Modélisé le 2026-08-19** (`Contraintes-Techniques.md` §5).
+  Fournisseur imposé : Gemini. **Sur Gemini 2.5 Flash (0,30 $/2,50 $ par million), une conversation
+  de vente coûte ≈ 10 FCFA, soit ≈ 6 000 FCFA/mois pour un commerçant à 20 conversations/jour.**
+  → **Un abonnement à 15 000 FCFA avec conversations illimitées tient**, avec ~60 % de marge brute.
+  🔴 **Mais il ne tient pas sur Gemini 3.7 Flash** (≈ 24 FCFA/conv. au tarif d'introduction, ≈ 48
+  après le 01/01/2027 quand ce tarif double).
+  *Chiffres fondés sur des hypothèses de volumétrie non mesurées — I3 à instrumenter dès le premier
+  jour pour les remplacer par des mesures réelles avant de figer la tarification.*
 
 - [ ] **Q14 — Ngavix.** Module « boutique WhatsApp » revendiqué à partir de 10 000 FCFA/mois
   (source secondaire non confirmée). S'il existe vraiment, il est pile dans le trou de prix
@@ -247,9 +342,12 @@
   reversement, API de callback, disponibilité réelle. À creuser avec `saas-essentiels`.
   Décision : ...
 
-- [ ] **Q6 — Périmètre réel de l'inbox.** Inbox minimale de supervision ou vraie boîte de
+- [x] **Q6 — Périmètre réel de l'inbox.** **Tranché : inbox de supervision, pas helpdesk** (E1,
+  et scope OUT d'`Idee.md`). *(Cochée le 19/08 — elle était restée ouverte à tort.)*
+
+<!-- **Q6 — Périmètre réel de l'inbox.** Inbox minimale de supervision ou vraie boîte de
   réception « qui remplace WhatsApp » ? À trancher au skill `fonctionnalites`.
-  Décision : ...
+  Décision : ... -->
 
 - [ ] **Q7 — Qui porte le coût des messages sortants.** Piste forte : en statut **Tech Provider**,
   le client ajoute son propre moyen de paiement sur son propre WABA — Meta le facture directement,
